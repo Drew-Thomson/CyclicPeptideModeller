@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loopmover"
+version = "0.1.0"
+description = "Cyclic peptide optimiser running on OpenMM."
+authors = [{ name = "Isambard Developers" }]
+requires-python = ">=3.9"
+dependencies = [
+    "ampal",
+    "isambard",
+    "openmm",
+    "numpy",
+    "matplotlib"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
