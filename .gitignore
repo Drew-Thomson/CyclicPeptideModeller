@@ -58,3 +58,4 @@ venv.bak/
 .vscode/
 *.swp
 *.swo
+test_forcefields_solvation.ipynb
