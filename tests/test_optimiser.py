@@ -1,5 +1,5 @@
-import pytest
 from loopmover.specification import CyclicPeptide
+
 
 def test_cyclic_peptide_creation():
     # Sequence of a cyclic peptide with D-amino acids

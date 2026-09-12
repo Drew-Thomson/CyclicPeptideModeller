@@ -1,10 +1,12 @@
-import random
 import copy
-import ampal
-import sys
 import math
+import random
+import sys
+
+import ampal
 from ampal.geometry import distance
 from isambard.specifications.ta_polypeptide import TAPolypeptide
+
 
 def calc_rmsd(frag1, frag2):
     """Returns the maximum distance between a pair of atoms in equivalent sets."""
@@ -28,7 +30,7 @@ def rand_mac(res, max_iter=20000, max_attempts=5, max_rmsd=0.05):
         return best_angles, best_rmsd_val
 
     best_angles, best_rmsd = get_best_initial(res)
-    print("Starting rmsd is {0}".format(best_rmsd))
+    print(f"Starting rmsd is {best_rmsd}")
     
     cached_tries = []
     attempts = 0
@@ -64,23 +66,23 @@ def rand_mac(res, max_iter=20000, max_attempts=5, max_rmsd=0.05):
             best_rmsd = new_rmsd
             
         if not(i % 100):
-            sys.stdout.write("\rAt iter {0} best rmsd is {1})".format(i, best_rmsd))
+            sys.stdout.write(f"\rAt iter {i} best rmsd is {best_rmsd})")
             sys.stdout.flush()
             
         i += 1
         if i == max_iter:
-            print('\nManaged only rmsd of {0}: resampling!'.format(best_rmsd))
+            print(f'\nManaged only rmsd of {best_rmsd}: resampling!')
             cached_tries.append((best_angles, best_rmsd))
             if attempts == max_attempts:
                 cached_tries.sort(key=lambda x: x[1])
-                print("Ran out of attempts, best rmsd was {0}".format(cached_tries[0][1]))
+                print(f"Ran out of attempts, best rmsd was {cached_tries[0][1]}")
                 return(cached_tries[0][0])
             
             best_angles, best_rmsd = get_best_initial(res)
             attempts += 1
             i = 0
 
-    print("\nAfter {0} iterations and {1} attempts best rmsd is {2}".format(i, attempts, best_rmsd))
+    print(f"\nAfter {i} iterations and {attempts} attempts best rmsd is {best_rmsd}")
     return(best_angles)
     
 def build_mac(angles):
@@ -95,7 +97,7 @@ class CyclicPeptide(ampal.Assembly):
     """Models a cyclic peptide."""
 
     def __init__(self, sequence, angles=None, auto_build=True):
-        super(CyclicPeptide, self).__init__()
+        super().__init__()
         self.sequence = sequence
         self.angles = angles
         if auto_build:

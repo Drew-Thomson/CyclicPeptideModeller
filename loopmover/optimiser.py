@@ -1,14 +1,17 @@
-import sys
 import copy
 import random
-import numpy
+import sys
 import tempfile
-import matplotlib.pyplot as plt
+
 import ampal
+import matplotlib.pyplot as plt
+import numpy
 import openmm as mm
+from ampal.geometry import Quaternion, angle_between_vectors, dihedral
 from openmm import app, unit, vec3
-from ampal.geometry import angle_between_vectors, dihedral, Quaternion, distance
+
 from loopmover.specification import CyclicPeptide
+
 
 def toroidal_dist(point1, point2):
 
@@ -21,19 +24,15 @@ def toroidal_dist(point1, point2):
         ydiff = 360 - ydiff
 
 #     return xdiff, ydiff
-#     print((xdiff, ydiff))
     return(numpy.sqrt(xdiff**2 + ydiff**2))
 
 
 def calc_rmsd2(rama1, rama2):
     dist = [toroidal_dist(x, y) for x, y in zip(rama1, rama2)]
-#     print(f"dist is {dist}")
     
     squares = [x**2 for x in dist]
-#     print(f"squares is {squares}")
     
     rmsd = numpy.sqrt(sum(squares)/len(dist))
-#     print(f"rmsd is {rmsd}")
 
     return(rmsd)
 
@@ -50,7 +49,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
     """
     start_pos = copy.deepcopy(positions)
     residues = [r for r in mod.topology.residues()]
-    res_ind = [r.index for r in residues]
     atoms1 = list(residues[index1].atoms())
     atoms2 = list(residues[index2].atoms())
     atoms3 = list(residues[index3].atoms())
@@ -74,10 +72,8 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
 
     
     indexlist1 = []
-# first
 #     indexlist1 += [at.index for at in residues[l12[0]].atoms() if at.name not in ['N', 'H', 'CA']]
     indexlist1 += [at.index for at in residues[l12[0]].atoms() if at.name in ['C', 'O']]
-#     print(f"l12[0] is {l12[0]}")
 # central 
 #     indexlist1 += [at.index for at in residues[l12[-1]].atoms() if at.name not in ['C', 'O', 'CA']]
     indexlist1 += [at.index for at in residues[l12[-1]].atoms() if at.name in ['N', 'H']]
@@ -85,31 +81,24 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
     for i in l12[1:-1]:
         indexlist1+=[at.index for at in residues[i].atoms()]
     sc_1 = [at.index for at in residues[index1].atoms() if at.name not in ['C', 'CA', 'O', 'N', 'H']]
-#     print(f"index 1 is {index1}")
-#     print(f"indexlist1 is {indexlist1}")
 
     indexlist2 = []
 # central
 #     indexlist2 += [at.index for at in residues[l23[0]].atoms() if at.name not in ['N', 'H', 'CA']]
     indexlist2 += [at.index for at in residues[l23[0]].atoms() if at.name in ['C', 'O']]
 
-# last
 #     indexlist2 += [at.index for at in residues[l23[-1]].atoms() if at.name not in ['C', 'O', 'CA']]
     indexlist2 += [at.index for at in residues[l23[-1]].atoms() if at.name in ['N', 'H']]
     
     for i in l23[1:-1]:
         indexlist2+=[at.index for at in residues[i].atoms()]
     sc_2 = [at.index for at in residues[index2].atoms() if at.name not in ['C', 'CA', 'O', 'N', 'H']]
-#     print(f"sc_2 is {sc_2}")
-#     print(f"indexlist2 is {indexlist2}")
 
 
     indexlist3 = []
-# first
 #     indexlist3 += [at.index for at in residues[l13[0]].atoms() if at.name not in ['N', 'H', 'CA']]
     indexlist3 += [at.index for at in residues[l13[0]].atoms() if at.name in ['C', 'O']]
 
-# last
     indexlist3 += [at.index for at in residues[l13[-1]].atoms() if at.name in ['N', 'H']]
 #     indexlist3 += [at.index for at in residues[l13[-1]].atoms() if at.name not in ['C', 'O', 'CA']]
 
@@ -117,7 +106,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
         indexlist3+=[at.index for at in residues[i].atoms()]
     sc_3 = [at.index for at in residues[index3].atoms() if at.name not in ['C', 'CA', 'O', 'N', 'H']]
 
-#     print(f"indexlist3 is {indexlist3}")
         
 
     indexlist = [indexlist1, indexlist2, indexlist3]
@@ -239,7 +227,7 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
     um4, p_um4 = poly_mul_sub2(u11, u33, u31, u13, p1, p3, p3, p1)
     um5, p_um5 = poly_mul_sub2(u13, um1, u33, um2, p1, p_um1, p3, p_um2)
     um6, p_um6 = poly_mul_sub2(u13, um4, u12, um3, p1, p_um4, p1, p_um3)
-    q_tmp, p_Q = poly_mul_sub2(u11, um5, u31, um6, p1, p_um5, p3, p_um6)
+    q_tmp, _p_Q = poly_mul_sub2(u11, um5, u31, um6, p1, p_um5, p3, p_um6)
 
     Q = q_tmp[:]
 
@@ -316,7 +304,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
         net_rotations += [taus[j] - ref_taus[j] for j in range(1, 3)]
         net_rotation_list.append([net_rotations[1], net_rotations[2], net_rotations[0]])
         #HOW CAN THIS MESS UP CB AND HB BUT NOT O OR H???
-    # print(f"net rot list is {net_rotation_list}")
     ax_ind = [(CAatom_ind[1], CAatom_ind[0]), (CAatom_ind[2], CAatom_ind[1]), (CAatom_ind[2], CAatom_ind[0])] 
 
     axes = []
@@ -408,7 +395,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
         sc3_pos = [start_pos[_]._value for _ in sc_3]
 
         q1 = Quaternion.angle_and_axis(angle=t1[1], axis=t1[2])
-#         print(q1)
         for j in range(len(sc_1)):
             rotated_vec = q1.rotate_vector(v=sc1_pos[j], point=t1[3])
             rotated_vec += t1[0]
@@ -416,7 +402,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
             output_pos[sc_1[j]] = newpos
         
         q2 = Quaternion.angle_and_axis(angle=t2[1], axis=t2[2])
-#         print(q2)
         for j in range(len(sc_2)):
             rotated_vec = q2.rotate_vector(v=sc2_pos[j], point=t2[3])
             rotated_vec += t2[0]
@@ -467,8 +452,6 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
 
         ref1a = ampal.geometry.distance(cb_1_new_v, c_1_new_v)
         ref1b = ampal.geometry.distance(cb_1_new_v, n_1_new_v)
-        # print(f"ref1a is {ref1a}")
-        # print(f"ref1b is {ref1b}")
         
         if ref1a > ref1b:
             a1 *= -1
@@ -478,23 +461,16 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
         
         ref2a = ampal.geometry.distance(cb_2_new_v, c_2_new_v)
         ref2b = ampal.geometry.distance(cb_2_new_v, n_2_new_v)        
-        # print(f"ref2a is {ref2a}")
-        # print(f"ref2b is {ref2b}")
         
         if ref2a > ref2b:
             a2 *= -1
             
         ref3a = ampal.geometry.distance(cb_3_new_v, c_3_new_v)
         ref3b = ampal.geometry.distance(cb_3_new_v, n_3_new_v)        
-        # print(f"ref3a is {ref3a}")
-        # print(f"ref3b is {ref3b}")
         
         if ref3a > ref3b:
             a3 *= -1   
         
-        # print(f"a1 is {a2}")
-        # print(f"a2 is {a2}")
-        # print(f"a3 is {a3}")
         # a1 and a2 are identical- ??? result of final rotation? OR something buggy/weird is going on in my code
         
         sc1_pos2 = [output_pos[_]._value for _ in sc_1]
@@ -502,21 +478,18 @@ def find_alternate_positions(mod, positions, index1, index2, index3):
         sc3_pos2 = [output_pos[_]._value for _ in sc_3]
         
         q1b = Quaternion.angle_and_axis(angle=a1, axis=new_1_cross) #(ca_1_ha_1 - ca_1_cb_1))
-#         print(q1)
         for j in range(len(sc_1)):
             rotated_vec = q1b.rotate_vector(v=sc1_pos2[j], point=ca_1_new_v)
             newpos = unit.quantity.Quantity(vec3.Vec3(*[x for x in rotated_vec]), unit=unit.nanometer)
             output_pos[sc_1[j]] = newpos
             
         q2b = Quaternion.angle_and_axis(angle=a2, axis=new_2_cross) #(ca_2_ha_2 - ca_2_cb_2))
-#         print(q1)
         for j in range(len(sc_2)):
             rotated_vec = q2b.rotate_vector(v=sc2_pos2[j], point=ca_2_new_v)
             newpos = unit.quantity.Quantity(vec3.Vec3(*[x for x in rotated_vec]), unit=unit.nanometer)
             output_pos[sc_2[j]] = newpos
             
         q3b = Quaternion.angle_and_axis(angle=a3, axis= new_3_cross) #(ca_3_ha_3 - ca_3_cb_3))
-#         print(q1)
         for j in range(len(sc_3)):
             rotated_vec = q3b.rotate_vector(v=sc3_pos2[j], point=ca_3_new_v)
             newpos = unit.quantity.Quantity(vec3.Vec3(*[x for x in rotated_vec]), unit=unit.nanometer)
@@ -716,9 +689,10 @@ class CyclicPeptideOptimiser:
         self.flip = 0
         self.cis_bad = 0
         
-        from pdbfixer import PDBFixer
-        from ampal.amino_acids import standard_amino_acids
         import os
+
+        from ampal.amino_acids import standard_amino_acids
+        from pdbfixer import PDBFixer
         
         with tempfile.NamedTemporaryFile(suffix='.pdb', delete=False) as f:
             f.write(self.start_mac.pdb.encode())
@@ -737,8 +711,8 @@ class CyclicPeptideOptimiser:
 
         residues = [r for r in self.model.topology.residues()]
         # assumes no OH at end. Would need to target and remove atoms for that if present
-        self.model.topology.addBond([at for at in residues[0].atoms() if at.name == 'N'][0],
-                                    [at for at in residues[-1].atoms() if at.name == 'C'][0])
+        self.model.topology.addBond(next(at for at in residues[0].atoms() if at.name == 'N'),
+                                    next(at for at in residues[-1].atoms() if at.name == 'C'))
         self.model.addHydrogens(pH = 5.0)
         #need to re-generate residues to get fresh atoms
         excess_atoms = [a for r in self.model.topology.residues() for a in r.atoms() if a.name in ('H2', 'H3', 'OXT')]
@@ -774,10 +748,10 @@ class CyclicPeptideOptimiser:
 
         residues2 = [r for r in self.model.topology.residues()]
         self.nonG_idx = [r.index for r in residues2 if r.name != 'GLY']
-        self.n_ind = [[a.index for a in r.atoms() if a.name == 'N'][0] for r in residues2 if r.name != 'GLY']
-        self.c_ind = [[a.index for a in r.atoms() if a.name == 'C'][0] for r in residues2 if r.name != 'GLY']
-        self.ca_ind = [[a.index for a in r.atoms() if a.name == 'CA'][0] for r in residues2 if r.name != 'GLY']
-        self.cb_ind = [[a.index for a in r.atoms() if a.name == 'CB'][0] for r in residues2 if r.name != 'GLY']
+        self.n_ind = [next(a.index for a in r.atoms() if a.name == 'N') for r in residues2 if r.name != 'GLY']
+        self.c_ind = [next(a.index for a in r.atoms() if a.name == 'C') for r in residues2 if r.name != 'GLY']
+        self.ca_ind = [next(a.index for a in r.atoms() if a.name == 'CA') for r in residues2 if r.name != 'GLY']
+        self.cb_ind = [next(a.index for a in r.atoms() if a.name == 'CB') for r in residues2 if r.name != 'GLY']
        
         integrator = mm.LangevinMiddleIntegrator(300*unit.kelvin, 1.0/unit.picoseconds, 2.0*unit.femtoseconds)
         integrator.setConstraintTolerance(0.00001)
@@ -798,9 +772,7 @@ class CyclicPeptideOptimiser:
             
         for k in range(len(self.seq)):
             chir = self.check_chirality(k, startpos)
-            if (chir == 'L') and (str.islower(self.seq[k])):
-                startpos = self.invert_chirality(k, startpos)
-            elif (chir == 'D') and not (str.islower(self.seq[k])):
+            if (chir == 'L') and (str.islower(self.seq[k])) or (chir == 'D') and not (str.islower(self.seq[k])):
                 startpos = self.invert_chirality(k, startpos)
 
         self.simulation.context.setPositions(startpos)
@@ -823,13 +795,12 @@ class CyclicPeptideOptimiser:
         i1 = index
         i2 = (index+1)%len(self.seq)
         
-#         print(f"indices are {i1} and {i2}")
         
 #         start_pos = copy.deepcopy(positions)
         residues = [r for r in self.model.topology.residues()]
         
-        ca1_i = [a.index for a in residues[i1].atoms() if a.name == 'CA'][0]
-        ca2_i = [a.index for a in residues[i2].atoms() if a.name == 'CA'][0]
+        ca1_i = next(a.index for a in residues[i1].atoms() if a.name == 'CA')
+        ca2_i = next(a.index for a in residues[i2].atoms() if a.name == 'CA')
                
         ca1_v = positions[ca1_i]._value
         ca2_v = positions[ca2_i]._value
@@ -839,10 +810,10 @@ class CyclicPeptideOptimiser:
         
         c1c2axis = ca2_v - ca1_v
         
-        c_i = [a.index for a in residues[i1].atoms() if a.name == 'C'][0]
-        o_i = [a.index for a in residues[i1].atoms() if a.name == 'O'][0]
-        n_i = [a.index for a in residues[i2].atoms() if a.name == 'N'][0]
-        h_i = [a.index for a in residues[i2].atoms() if a.name in ('H', 'CD')][0]
+        c_i = next(a.index for a in residues[i1].atoms() if a.name == 'C')
+        o_i = next(a.index for a in residues[i1].atoms() if a.name == 'O')
+        n_i = next(a.index for a in residues[i2].atoms() if a.name == 'N')
+        h_i = next(a.index for a in residues[i2].atoms() if a.name in ('H', 'CD'))
         
         idx_list = [c_i, o_i, n_i, h_i]
         
@@ -889,7 +860,6 @@ class CyclicPeptideOptimiser:
         
         #pick index
         #identify next residue- index +1 or wrapped version
-        #get Ca vectors
         # generate quaternion
         # apply quaternion
 
@@ -992,11 +962,11 @@ class CyclicPeptideOptimiser:
         """
         res = [r for r in self.model.topology.residues()][res_index]
 # should work for glycine now to preserve prochirality of the hydrogens
-        ca_id = [a.index for a in res.atoms() if a.name == 'CA'][0]
-        cb_id = [a.index for a in res.atoms() if a.name in ('CB', 'HA3')][0]
+        ca_id = next(a.index for a in res.atoms() if a.name == 'CA')
+        cb_id = next(a.index for a in res.atoms() if a.name in ('CB', 'HA3'))
 #         c_id = [a.index for a in res.atoms() if a.name == 'C'][0]
-        n_id = [a.index for a in res.atoms() if a.name == 'N'][0]
-        ha_id = [a.index for a in res.atoms() if a.name in ('HA', 'HA2')][0]
+        n_id = next(a.index for a in res.atoms() if a.name == 'N')
+        ha_id = next(a.index for a in res.atoms() if a.name in ('HA', 'HA2'))
 
         ca_v = positions[ca_id]._value
         cb_v = positions[cb_id]._value
@@ -1020,19 +990,16 @@ class CyclicPeptideOptimiser:
         """
         outpos = copy.deepcopy(positions)
         res = [r for r in self.model.topology.residues()][res_index]
-        ca_id = [a.index for a in res.atoms() if a.name == 'CA'][0]
+        ca_id = next(a.index for a in res.atoms() if a.name == 'CA')
         # should work for glycines as well now
-        ha_id = [a.index for a in res.atoms() if a.name in ('HA', 'HA2')][0]
+        ha_id = next(a.index for a in res.atoms() if a.name in ('HA', 'HA2'))
         
-        cb_id = [a.index for a in res.atoms() if a.name in ('CB', 'HA3')][0]
+        cb_id = next(a.index for a in res.atoms() if a.name in ('CB', 'HA3'))
 
         ca_v = positions[ca_id]._value
         ha_v = positions[ha_id]._value
         cb_v = positions[cb_id]._value
 
-#         print(f"ca_v is {ca_v}")
-#         print(f"ha_v is {ha_v}")
-#         print(f"cb_v is {cb_v}")
 
         
 #         ca_ha_vec = ha_v - ca_v
@@ -1041,11 +1008,9 @@ class CyclicPeptideOptimiser:
         #transformation to move SC to Ha position
         # separate one for each element of side chain???
         t1 = ampal.geometry.find_transformations(ca_v, cb_v, ca_v, ha_v)
-#         print(f"t1 is {t1}")
         
         #transformation to move Ha to SC position
         t2 = ampal.geometry.find_transformations(ca_v, ha_v, ca_v, cb_v)
-#         print(f"t2 is {t2}")
         
         
         q1 = Quaternion.angle_and_axis(angle=t1[1], axis=t1[2])
@@ -1057,17 +1022,11 @@ class CyclicPeptideOptimiser:
             sc_ids = [a.index for a in res.atoms() if a.name not in ('N', 'HA', 'HA2', 'CA', 'C', 'O')]
         else:
             sc_ids = [a.index for a in res.atoms() if a.name not in ('N', 'H', 'HA', 'HA2', 'CA', 'C', 'O')]
-#         print(f"moving other shit by {t1[0]}")
-#         print(f'moving Ha by {t2[0]}')
-#         print(f"sc_ids are {sc_ids}")
         
-        # move Ha
         new_ha_v = q2.rotate_vector(v=ha_v, point=t2[3])
         new_ha_v2 = new_ha_v + t2[0]
         
-#         print(f"original ha_v is {ha_v}")
 
-#         print(f"new ha_v is {new_ha_v2}")
 
         new_ha_pos = unit.quantity.Quantity(vec3.Vec3(*[x for x in new_ha_v2]), unit=unit.nanometer)
         outpos[ha_id] = new_ha_pos
@@ -1115,9 +1074,9 @@ class CyclicPeptideOptimiser:
         wrong_chir = [] # count of number of wrong chirality side chains
         for i in ind:
             try:
-                a1 = [a.index for a in res[i].atoms() if a.name == 'HB'][0]
-                a2 = [a.index for a in res[i].atoms() if a.name == 'CA'][0]
-                a3 = [a.index for a in res[i].atoms() if a.name in ('CB', 'HA3')][0]
+                a1 = next(a.index for a in res[i].atoms() if a.name == 'HB')
+                a2 = next(a.index for a in res[i].atoms() if a.name == 'CA')
+                a3 = next(a.index for a in res[i].atoms() if a.name in ('CB', 'HA3'))
                 cg_candidates = [a.index for a in res[i].atoms() if a.name in ('CG1', 'CG2')]
                 if not cg_candidates: continue
                 cg_id = cg_candidates[0]
@@ -1133,9 +1092,8 @@ class CyclicPeptideOptimiser:
                 if res[i].name == 'THR':
                     if (not is_d and dihe < 0) or (is_d and dihe > 0):
                         wrong_chir.append(i)
-                elif res[i].name == 'ILE':
-                    if (not is_d and dihe > 0) or (is_d and dihe < 0):
-                        wrong_chir.append(i)
+                elif res[i].name == 'ILE' and ((not is_d and dihe > 0) or (is_d and dihe < 0)):
+                    wrong_chir.append(i)
             except IndexError:
                 continue
                 
@@ -1144,9 +1102,9 @@ class CyclicPeptideOptimiser:
             
         for i in wrong_chir:
             try:
-                ca_id = [a.index for a in res[i].atoms() if a.name == 'CA'][0]
-                cb_id = [a.index for a in res[i].atoms() if a.name in ('CB', 'HA3')][0]
-                n_id = [a.index for a in res[i].atoms() if a.name == 'N'][0]
+                ca_id = next(a.index for a in res[i].atoms() if a.name == 'CA')
+                cb_id = next(a.index for a in res[i].atoms() if a.name in ('CB', 'HA3'))
+                n_id = next(a.index for a in res[i].atoms() if a.name == 'N')
                 
                 ca_v = numpy.array(positions[ca_id]._value)
                 cb_v = numpy.array(positions[cb_id]._value)
@@ -1187,7 +1145,6 @@ class CyclicPeptideOptimiser:
 
             rama = temp_ramas[1:]+[temp_ramas[0]]
             ramalist.append(rama)
-#         print(f'ramalist is {ramalist}')
 
         tmp_current = []
         accepted_indices = []
@@ -1211,7 +1168,6 @@ class CyclicPeptideOptimiser:
         self.working_pop = [copy.deepcopy(self.initial_state)]
         self.halloffame = [copy.deepcopy(self.initial_state)]        
         self.rama_rmsd = rama_rmsd
-        residues = [r for r in self.model.topology.residues()] #should only need to do this once
         self.tol = tol
         self.max_iter = max_iter
         
@@ -1267,13 +1223,8 @@ class CyclicPeptideOptimiser:
                         current_positions = self.sc_chir_check_flip(current_positions, flip=True)
                         
                     for k in range(len(self.seq)):
-                            #test chirality
                         chir = self.check_chirality(k, current_positions)
-                        if (chir == 'L') and (str.islower(self.seq[k])):
-                            current_positions = self.invert_chirality(k, current_positions)
-                            self.flip += 1
-                            flipnow += 1
-                        elif (chir == 'D') and not (str.islower(self.seq[k])):
+                        if (chir == 'L') and (str.islower(self.seq[k])) or (chir == 'D') and not (str.islower(self.seq[k])):
                             current_positions = self.invert_chirality(k, current_positions)
                             self.flip += 1
                             flipnow += 1
@@ -1294,19 +1245,15 @@ class CyclicPeptideOptimiser:
                     #add one for every fail
                     badchir = 0
                     
-                    if any(x in 'TtIi' for x in self.seq):
-                        if not self.sc_chir_check_flip(current_positions, flip=False):
-                            badchir += 1
+                    if any(x in 'TtIi' for x in self.seq) and not self.sc_chir_check_flip(current_positions, flip=False):
+                        badchir += 1
                         # if duff side chain get false out of this, need to kill model and move to next
                         # maybe just add a flag and pick up at cis check?
                         
                     for k in range(len(self.seq)):
 #                        if residues[k].name != 'GLY':
-                            #test chirality
                         chir = self.check_chirality(k, current_positions)
-                        if (chir == 'L') and (str.islower(self.seq[k])):
-                            badchir += 1
-                        elif (chir == 'D') and not (str.islower(self.seq[k])):
+                        if (chir == 'L') and (str.islower(self.seq[k])) or (chir == 'D') and not (str.islower(self.seq[k])):
                             badchir += 1
                         # now check for non pro cis residues
                     dihe2 = []
@@ -1315,29 +1262,24 @@ class CyclicPeptideOptimiser:
                     idx2 = [idx[-1]]+idx+[idx[0]]
                     for j in idx:
                         res = reslist[j]
-                        if res.name != 'thargon the magnificent':
-                            atoms1 = [a for a in res.atoms() if a.name in ('N', 'CA')]
-                            atoms2 = [a for a in reslist[idx2[j]].atoms() if a.name in ('C', 'CA')]
-                            atoms = atoms2 + atoms1
-                            at_idx = [a.index for a in atoms]
-                            amides = [current_positions[x]._value for x in at_idx]
-                            dihe2.append(dihedral(*amides))
+                        atoms1 = [a for a in res.atoms() if a.name in ('N', 'CA')]
+                        atoms2 = [a for a in reslist[idx2[j]].atoms() if a.name in ('C', 'CA')]
+                        atoms = atoms2 + atoms1
+                        at_idx = [a.index for a in atoms]
+                        amides = [current_positions[x]._value for x in at_idx]
+                        dihe2.append(dihedral(*amides))
                     if all(abs(d) > 20 for d in dihe2):
                         #attempt to shut down exploding simulations -3000 arbitrary. Scale to seq len?
-                        if abs(current_energy) < 400 * len(self.seq):
-                            if badchir == 0:
-                                new_entry = (current_energy, current_positions)
-                                current_models.append(new_entry)
-                                self.good += 1
-#                             else:
-#                                 print('threw out a model with bad chirality')
+                        if abs(current_energy) < 400 * len(self.seq) and badchir == 0:
+                            new_entry = (current_energy, current_positions)
+                            current_models.append(new_entry)
+                            self.good += 1
                     else:
                         # there is a non PRO cis amide, don't keep it, count the failure
                         self.cis_bad += 1
                 # exception catching for openmm issues- not really needed but prevents problems...
                 #... being hidden by try above (try is good but only if except is informative)
-                except BaseException as e:
-                    # print(f"openmm not happy: {e}")
+                except Exception:
                     pass
             #combine all models and sort by score
             current_models.sort(key = lambda x: x[0])
@@ -1385,6 +1327,7 @@ class CyclicPeptideOptimiser:
 
     def plot_halloffame_ramachandran(self, cols=3):
         import math
+
         import matplotlib.pyplot as plt
         import numpy
         
