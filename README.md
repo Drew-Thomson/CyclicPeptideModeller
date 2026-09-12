@@ -24,7 +24,7 @@ sequence = 'rQpqRePQ'
 optimiser = CyclicPeptideOptimiser(sequence)
 optimiser.build_start_mac()
 optimiser.amber_setup()
-optimiser.optimise(n_iter=5, samplesize=20, max_iter=5)
+optimiser.optimise(n_iter=5, samplesize=20, max_minimisation_steps=100)
 ```
 
 ## Customising the Forcefield

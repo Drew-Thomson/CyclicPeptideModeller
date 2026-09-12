@@ -1165,7 +1165,7 @@ class CyclicPeptideOptimiser:
                 accepted_indices.append(j)
         return tmp_current
 
-    def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, n_permute=3, n_flip=5, tol=5, max_iter=100, plot=True):
+    def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, n_permute=3, n_flip=5, tol=2, max_minimisation_steps=100, plot=True):
         #run the optimisation
         
         print(f'optimising sequence {self.seq}')
@@ -1174,7 +1174,7 @@ class CyclicPeptideOptimiser:
         self.halloffame = [copy.deepcopy(self.initial_state)]        
         self.rama_rmsd = rama_rmsd
         self.tol = tol
-        self.max_iter = max_iter
+        self.max_minimisation_steps = max_minimisation_steps
         
         for i in range(n_iter):
             current_models = []
@@ -1218,7 +1218,7 @@ class CyclicPeptideOptimiser:
                         idx = self.force.getParticleParameters(k)[0]
                         self.force.setParticleParameters(k, idx, pos[idx]._value)
                     self.force.updateParametersInContext(self.simulation.context)
-                    self.simulation.minimizeEnergy(tolerance=self.tol*unit.kilojoule/(unit.nanometer*unit.mole), maxIterations=self.max_iter)
+                    self.simulation.minimizeEnergy(tolerance=self.tol*unit.kilojoule/(unit.nanometer*unit.mole), maxIterations=self.max_minimisation_steps)
                     state = self.simulation.context.getState(getEnergy=True, getPositions=True)
                     current_energy = state.getPotentialEnergy() / unit.kilojoules_per_mole
                     current_positions = state.getPositions()
@@ -1240,7 +1240,7 @@ class CyclicPeptideOptimiser:
                         self.force.setParticleParameters(k, idx, current_positions[idx]._value)
                     self.force.updateParametersInContext(self.simulation.context)
 #                     self.simulation.minimizeEnergy(maxIterations=100)
-                    self.simulation.minimizeEnergy(tolerance=self.tol*unit.kilojoule/(unit.nanometer*unit.mole), maxIterations=self.max_iter)                    
+                    self.simulation.minimizeEnergy(tolerance=self.tol*unit.kilojoule/(unit.nanometer*unit.mole), maxIterations=self.max_minimisation_steps)
                     state = self.simulation.context.getState(getEnergy=True, getPositions=True)
                     current_energy = state.getPotentialEnergy() / unit.kilojoules_per_mole
                     current_positions = state.getPositions()
