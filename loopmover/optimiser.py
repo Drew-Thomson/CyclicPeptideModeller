@@ -1168,20 +1168,34 @@ class CyclicPeptideOptimiser:
 
     def is_aberrant(self, positions):
         import numpy
-        reslist = list(self.model.topology.residues())
-        for res in reslist:
-            bb_atoms = []
-            sc_atoms = []
-            for a in res.atoms():
-                if a.name in ('N', 'CA', 'C', 'O'):
-                    bb_atoms.append(numpy.array(positions[a.index]._value))
-                elif a.name not in ('H', 'HA', 'HA2', 'HA3', 'CB') and not a.name.startswith('H'):
-                    sc_atoms.append(numpy.array(positions[a.index]._value))
+        
+        # Extract heavy atoms
+        heavy_atoms = [a for a in self.model.topology.atoms() if a.element.symbol != 'H']
+        
+        # Build a set of allowed bonds (using topology bonds)
+        bonded_pairs = set()
+        for b in self.model.topology.bonds():
+            bonded_pairs.add((b[0].index, b[1].index))
+            bonded_pairs.add((b[1].index, b[0].index))
             
-            for bb in bb_atoms:
-                for sc in sc_atoms:
-                    if numpy.linalg.norm(bb - sc) < 0.11: # 0.11 nm = 1.1 Angstroms
-                        return True
+        # Check all pairs of heavy atoms
+        for i in range(len(heavy_atoms)):
+            a1 = heavy_atoms[i]
+            p1 = numpy.array(positions[a1.index]._value)
+            for j in range(i + 1, len(heavy_atoms)):
+                a2 = heavy_atoms[j]
+                
+                # Skip if they are bonded
+                if (a1.index, a2.index) in bonded_pairs:
+                    continue
+                    
+                p2 = numpy.array(positions[a2.index]._value)
+                dist = numpy.linalg.norm(p1 - p2)
+                
+                # The shortest non-bonded heavy atom distance should be > ~2.3 A (0.23 nm)
+                if dist < 0.18: # 0.18 nm = 1.8 Angstroms
+                    return True
+                    
         return False
 
     def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, n_permute=3, n_flip=5, tol=2, max_minimisation_steps=100, plot=True):
