@@ -7,7 +7,7 @@ name = "loopmover"
 version = "0.1.0"
 description = "Cyclic peptide optimiser running on OpenMM."
 authors = [{ name = "Isambard Developers" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "ampal",
     "isambard",
