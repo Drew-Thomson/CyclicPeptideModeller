@@ -26,3 +26,15 @@ optimiser.build_start_mac()
 optimiser.amber_setup()
 optimiser.optimise(n_iter=5, samplesize=20, max_iter=5)
 ```
+
+## Customising the Forcefield
+
+The default OpenMM forcefield, implicit solvent model, and pH can be overridden dynamically:
+
+```python
+optimiser.amber_setup(
+    forcefield='amberfb15.xml', 
+    implicit_solvent='implicit/obc2.xml', 
+    pH=7.0
+)
+```
