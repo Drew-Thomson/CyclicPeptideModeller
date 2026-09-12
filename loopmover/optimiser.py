@@ -1165,7 +1165,27 @@ class CyclicPeptideOptimiser:
                 accepted_indices.append(j)
         return tmp_current
 
+
+    def is_aberrant(self, positions):
+        import numpy
+        reslist = list(self.model.topology.residues())
+        for res in reslist:
+            bb_atoms = []
+            sc_atoms = []
+            for a in res.atoms():
+                if a.name in ('N', 'CA', 'C', 'O'):
+                    bb_atoms.append(numpy.array(positions[a.index]._value))
+                elif a.name not in ('H', 'HA', 'HA2', 'HA3', 'CB') and not a.name.startswith('H'):
+                    sc_atoms.append(numpy.array(positions[a.index]._value))
+            
+            for bb in bb_atoms:
+                for sc in sc_atoms:
+                    if numpy.linalg.norm(bb - sc) < 0.11: # 0.11 nm = 1.1 Angstroms
+                        return True
+        return False
+
     def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, n_permute=3, n_flip=5, tol=2, max_minimisation_steps=100, plot=True):
+
         #run the optimisation
         
         print(f'optimising sequence {self.seq}')
@@ -1183,7 +1203,10 @@ class CyclicPeptideOptimiser:
             while len(self.newpositions) < (samplesize):
 #                 self.startpos = random.choice(self.newpositions)
                 self.startpos = random.choice(self.working_pop)[1]               
-                id_tmp = sorted(random.sample(range(len(self.seq)), 3))
+                valid_indices = [i for i in range(len(self.seq)) if self.seq[i].upper() != 'P']
+                if len(valid_indices) < 3:
+                    valid_indices = list(range(len(self.seq)))
+                id_tmp = sorted(random.sample(valid_indices, 3))
                 ran_int = random.randint(0, 2)
                 indices = (id_tmp[ran_int:]+id_tmp[:ran_int])
                 self.newpos = find_alternate_positions(self.model, self.startpos, *indices)
@@ -1275,7 +1298,7 @@ class CyclicPeptideOptimiser:
                         dihe2.append(dihedral(*amides))
                     if all(abs(d) > 20 for d in dihe2):
                         #attempt to shut down exploding simulations -3000 arbitrary. Scale to seq len?
-                        if abs(current_energy) < 400 * len(self.seq) and badchir == 0:
+                        if abs(current_energy) < 400 * len(self.seq) and badchir == 0 and not self.is_aberrant(current_positions):
                             new_entry = (current_energy, current_positions)
                             current_models.append(new_entry)
                             self.good += 1
