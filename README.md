@@ -11,7 +11,7 @@ The underlying kinematic closure algorithm is detailed in [10.1002/jcc.10416](ht
 
 ## Overview
 
-Provides tools to build, close, and optimise cyclic peptide structures using kinematic closure and OpenMM for energy minimisation.
+Provides tools to build, close, and optimise cyclic peptide structures using kinematic closure and OpenMM for energy minimisation. The algorithm supports modelling for heterochiral cyclic peptides. Aa random macrocycle starting backbone geometry is generated, then sections of the cycle are randomly switched to new geometries using the kinematic chain logic. Energy is assessed using openmm, with user-specified choice of forcefield.
 
 ## Demonstration
 
