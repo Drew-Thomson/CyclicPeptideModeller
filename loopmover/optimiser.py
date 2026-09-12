@@ -670,7 +670,7 @@ def calc_t2(t0, Q, R):
 
 class CyclicPeptideOptimiser:
     
-    def __init__(self, seq, forcefield='amber14-all.xml', implicit_solvent='implicit/obc1.xml'): #, rmsd_cut=50):
+    def __init__(self, seq, forcefield='amber14-all.xml', implicit_solvent='implicit/obc2.xml'): #, rmsd_cut=50):
     # initialise
         
         self.seq = seq
@@ -683,7 +683,12 @@ class CyclicPeptideOptimiser:
         # We use CyclicPeptide to generate a starting backbone macrocycle.
         self.start_mac = CyclicPeptide(self.seq, auto_build=True)
 
-    def amber_setup(self):
+    def amber_setup(self, forcefield=None, implicit_solvent=None, pH=7.0):
+        if forcefield is not None:
+            self.forcefield = forcefield
+        if implicit_solvent is not None:
+            self.implicit_solvent = implicit_solvent
+            
         self.good = 0
         self.bad = 0
         self.flip = 0
@@ -713,7 +718,7 @@ class CyclicPeptideOptimiser:
         # assumes no OH at end. Would need to target and remove atoms for that if present
         self.model.topology.addBond(next(at for at in residues[0].atoms() if at.name == 'N'),
                                     next(at for at in residues[-1].atoms() if at.name == 'C'))
-        self.model.addHydrogens(pH = 5.0)
+        self.model.addHydrogens(pH=pH)
         #need to re-generate residues to get fresh atoms
         excess_atoms = [a for r in self.model.topology.residues() for a in r.atoms() if a.name in ('H2', 'H3', 'OXT')]
         self.model.delete(excess_atoms)
