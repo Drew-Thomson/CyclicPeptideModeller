@@ -1198,7 +1198,7 @@ class CyclicPeptideOptimiser:
                     
         return False
 
-    def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, n_permute=3, n_flip=5, tol=2, max_minimisation_steps=100, plot=True):
+    def optimise(self, n_iter, wp_len=20, samplesize=200, hof_len=5, rama_rmsd=15, max_rama_rmsd=15, n_permute=3, n_flip=5, tol=2, max_minimisation_steps=100, plot=True):
 
         #run the optimisation
         
@@ -1346,7 +1346,7 @@ class CyclicPeptideOptimiser:
                 # Too lax: far more models survived than we need
                 ratio = survival_rate / (target_survival * 3)
                 step = min(10.0, max(1.0, ratio * 2))
-                self.rama_rmsd += step
+                self.rama_rmsd = min(max_rama_rmsd, self.rama_rmsd + step)
             
             self.halloffame = self.halloffame[:hof_len]
             # cut to length anyways
